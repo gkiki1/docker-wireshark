@@ -1,5 +1,5 @@
 # Download base image ubuntu
-FROM ubuntu:24.04 LTS
+FROM ubuntu:22.04
 
 # LABEL about the custom image
 LABEL version="0.1"
@@ -9,7 +9,7 @@ LABEL description="This is custom Wireshark Docker Image using latest ubuntu/wir
 # skip interactive configuration dialogs
 ENV DEBIAN_FRONTEND noninteractive
 
-# add xpra repository and install Xpra and wireshark
+# add xpra repository and install Xpra
 RUN apt-get update && \
     apt install -y --no-install-recommends wget gnupg xvfb x11-xserver-utils python3-pip \
     && pip3 install pyinotify \
@@ -18,7 +18,7 @@ RUN apt-get update && \
     && apt update \
     && apt install -y --no-install-recommends xpra-html5 \
     && apt-get remove -y --purge gnupg wget \
-    && apt-get autoremove -y --purge
+    && apt-get autoremove -y --purge \
     && rm -rf /var/lib/apt/lists/*
 
 # add xpra user
@@ -32,15 +32,12 @@ RUN mkdir -p /run/user/1000/xpra \
 # allow users to read default certificate
 RUN chmod 644 /etc/xpra/ssl-cert.pem
 
-# expose xpra HTML5 client port
-EXPOSE 14500
-
 # install wireshark    
 RUN apt-get update \
     && apt install -y --no-install-recommends binutils \
     && apt install -y --no-install-recommends wireshark \
     && apt-get remove -y --purge binutils \
-    && apt-get autoremove -y --purge
+    && apt-get autoremove -y --purge \
     && rm -rf /var/lib/apt/lists/*
 
 # allow non-root users to capture network traffic
@@ -49,11 +46,14 @@ RUN setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' /usr/bin/dumpcap
 # set default password to access wireshark
 ENV XPRA_PASSWORD wireshark
 
+# expose xpra HTML5 client port
+EXPOSE 14500
+
 # xpra configuration when docker start
 ENTRYPOINT ["xpra", "start", ":80", "--bind-tcp=0.0.0.0:14500", \
  "--mdns=no", "--webcam=no", "--no-daemon", "tcp-auth=env", "html=on",\
  "ssl-client-verify-mode=none", "socket-dirs=/run/user/1000/xpra", \
- "systemd-run=no", "ssl-cert=/etc/xpra/ssl-cert.pem"]
+ "systemd-run=no", "ssl-cert=/etc/xpra/ssl-cert.pem", "XPRA_PASSWORD=$XPRA_PASSWORD"]
  
 # start wireshark by default
-CMD ["wireshark --fullscreen"]
+CMD ["wireshark", "--fullscreen"]
