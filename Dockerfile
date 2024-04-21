@@ -29,6 +29,9 @@ WORKDIR /home/xpra
 RUN mkdir -p /run/user/1000/xpra \
     && chown -R 1000 /run/user/1000
 
+# allow users to read default certificate
+RUN chmod 644 /etc/xpra/ssl-cert.pem
+
 # expose xpra HTML5 client port
 EXPOSE 14500
 
@@ -50,7 +53,7 @@ ENV XPRA_PASSWORD wireshark
 ENTRYPOINT ["xpra", "start", ":80", "--bind-tcp=0.0.0.0:14500", \
  "--mdns=no", "--webcam=no", "--no-daemon", "tcp-auth=env", "html=on",\
  "ssl-client-verify-mode=none", "socket-dirs=/run/user/1000/xpra", \
- "ystemd-run=no"]
+ "systemd-run=no", "ssl-cert=/etc/xpra/ssl-cert.pem"]
  
 # start wireshark by default
 CMD ["wireshark --fullscreen"]
