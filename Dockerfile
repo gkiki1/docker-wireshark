@@ -32,6 +32,9 @@ RUN mkdir -p /run/user/1000/xpra \
 # allow users to read default certificate
 RUN chmod 644 /etc/xpra/ssl-cert.pem
 
+# expose xpra HTML5 client port
+EXPOSE 14500
+
 # install wireshark    
 RUN apt-get update \
     && apt install -y --no-install-recommends binutils \
@@ -45,9 +48,6 @@ RUN setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' /usr/bin/dumpcap
 
 # set default password to access wireshark
 ENV XPRA_PASSWORD wireshark
-
-# expose xpra HTML5 client port
-EXPOSE 14500
 
 # xpra configuration when docker start
 ENTRYPOINT ["xpra", "start", ":80", "--bind-tcp=0.0.0.0:14500", \
